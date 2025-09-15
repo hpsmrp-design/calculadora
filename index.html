@@ -135,9 +135,10 @@
       <div class="total" id="total">R$ 0</div>
 
       <h3>Descontos</h3>
-      <div class="check"><input type="checkbox" id="desc-cnpj"/> <label for="desc-cnpj">Desconto CNPJ (20%)</label></div>
-      <div class="check"><input type="checkbox" id="desc-pm"/> <label for="desc-pm">Desconto PM/Arcanjo (40%)</label></div>
-      <div class="check"><input type="checkbox" id="desc-plano"/> <label for="desc-plano">Desconto Plano de Saúde (20%)</label></div>
+      <div class="check"><input type="radio" name="desconto" id="desc-nenhum" checked/> <label for="desc-nenhum">Nenhum</label></div>
+      <div class="check"><input type="radio" name="desconto" id="desc-cnpj"/> <label for="desc-cnpj">CNPJ (20%)</label></div>
+      <div class="check"><input type="radio" name="desconto" id="desc-pm"/> <label for="desc-pm">PM/Arcanjo (40%)</label></div>
+      <div class="check"><input type="radio" name="desconto" id="desc-plano"/> <label for="desc-plano">Plano de Saúde (20%)</label></div>
 
       <div style="margin-top:6px"><small style="color:#334155;font-weight:800">Atalhos</small>
         <div class="chips">
@@ -188,60 +189,61 @@
   </div>
 
 <script>
-  // ===== DADOS (com categoria e limites) =====
-  // cat: 'med' | 'exame' | 'consulta' | 'outros'
+  // ===== DADOS =====
   const ITENS = [
-    // Medicamentos
-    {id:'adrenalina',   nome:'Adrenalina',                preco:12000, emoji:'💉', cat:'med', max:3,  maxPM:5},
-    {id:'analgesico',   nome:'Analgésico',                preco:600,   emoji:'💊', cat:'med', max:10, maxPM:20},
-    {id:'atadura',      nome:'Atadura',                   preco:300,   emoji:'🩹', cat:'med', max:10, maxPM:20},
-    {id:'bandagem',     nome:'Bandagem',                  preco:500,   emoji:'🩺', cat:'med', max:5,  maxPM:5},
-    {id:'kitmed',       nome:'Medkit',                    preco:2500,  emoji:'🧰', cat:'med', max:2,  maxPM:2},
-    {id:'ritmoneury',   nome:'Ritmoneury',                preco:800,   emoji:'🧪', cat:'med', max:5,  maxPM:5},
-    {id:'sincalm',      nome:'Sinkalm',                   preco:800,   emoji:'🧴', cat:'med', max:5,  maxPM:5},
-    {id:'ursinho',      nome:'Ursinho',                   preco:30000, emoji:'🧸', cat:'med', max:99, maxPM:99},
+    // Medicamentos (quantidade livre; limites exibidos)
+    {id:'adrenalina',   nome:'Adrenalina', preco:12000, emoji:'💉', cat:'med', max:3,  maxPM:5},
+    {id:'analgesico',   nome:'Analgésico', preco:600,   emoji:'💊', cat:'med', max:10, maxPM:20},
+    {id:'atadura',      nome:'Atadura',    preco:300,   emoji:'🩹', cat:'med', max:10, maxPM:20},
+    {id:'bandagem',     nome:'Bandagem',   preco:500,    emoji:'🧻', cat:'med', max:5,  maxPM:5},
+    {id:'kitmed',       nome:'Medkit',     preco:2500,  emoji:'🧰', cat:'med', max:2,  maxPM:2},
+    {id:'ritmoneury',   nome:'Ritmoneury', preco:800,   emoji:'🧪', cat:'med', max:5,  maxPM:5},
+    {id:'sincalm',      nome:'Sinkalm',    preco:800,   emoji:'🧴', cat:'med', max:5,  maxPM:5},
+    {id:'ursinho',      nome:'Ursinho',    preco:30000, emoji:'🧸', cat:'med', max:99, maxPM:99},
 
-    // Exames & Consultas
-    {id:'raiox',        nome:'Raio-X',                    preco:2500,  emoji:'🩻', cat:'exame'},
-    {id:'ressonancia',  nome:'Ressonância',               preco:4000,  emoji:'🧠', cat:'exame'},
-    {id:'consulta',     nome:'Consulta',                  preco:12000, emoji:'📋', cat:'consulta'},
+    // Exames & Consultas (toggle)
+    {id:'raiox',         nome:'Raio-X',       preco:2500,  emoji:'🩻', cat:'exame'},
+    {id:'ressonancia',   nome:'Ressonância',  preco:4000,  emoji:'🧠', cat:'exame'},
+    {id:'exeme-breve',   nome:'Exeme Breve',  preco:50000, emoji:'🧪', cat:'exame'},  // <-- novo item
+    {id:'consulta',      nome:'Consulta',     preco:12000, emoji:'📋', cat:'consulta'},
 
-    // Outros (seleção única)
-    {id:'gesso',        nome:'Gesso',                     preco:2500,  emoji:'🧱', cat:'outros'},
-    {id:'cirurgia',     nome:'Cirurgia',                  preco:250000,emoji:'🏥', cat:'outros'},
-    {id:'queimadura',   nome:'Queimadura',                preco:2500,  emoji:'🔥', cat:'outros'},
-    {id:'outros-exames',nome:'Outros Exames',             preco:3000,  emoji:'🧾', cat:'outros'},
+    // Outros (toggle)
+    {id:'gesso',         nome:'Gesso',        preco:2500,  emoji:'🧱', cat:'outros'},
+    {id:'cirurgia',      nome:'Cirurgia',     preco:250000,emoji:'🏥', cat:'outros'},
+    {id:'queimadura',    nome:'Queimadura',   preco:2500,  emoji:'🔥', cat:'outros'},
+    {id:'outros-exames', nome:'Outros Exames',preco:3000,  emoji:'🧾', cat:'outros'},
 
-    // Itens deslocados para a primeira seção (toggle)
-    {id:'desl-curto',   nome:'Deslocamento curto (Sul)',  preco:1000,  emoji:'🚑', cat:'outros', mode:'toggle', section:'med'},
-    {id:'desl-longo',   nome:'Deslocamento longo (Norte)',preco:1500,  emoji:'🚑', cat:'outros', mode:'toggle', section:'med'},
-    {id:'tt',           nome:'Tratamento (TT)',           preco:2000,  emoji:'🧷', cat:'outros', mode:'toggle', section:'med'}
+    // Atalhos (mostrados na 1ª seção, mas são toggle)
+    {id:'desl-curto',   nome:'Deslocamento curto (Sul)',  preco:1000, emoji:'🚑', cat:'outros', mode:'toggle', section:'med'},
+    {id:'desl-longo',   nome:'Deslocamento longo (Norte)',preco:1500, emoji:'🚑', cat:'outros', mode:'toggle', section:'med'},
+    {id:'tt',           nome:'Tratamento (TT)',           preco:2000, emoji:'🧷', cat:'outros', mode:'toggle', section:'med'}
   ];
 
+  // ===== ESTADO / HELPERS =====
   const grids = document.getElementById('grids');
   const medGrid = document.getElementById('grid-med');
   const exameGrid = document.getElementById('grid-exame');
   const outrosGrid = document.getElementById('grid-outros');
-  const state = new Map(); // id -> qtd (med = número; demais = 0/1)
+  const state = new Map(); // id -> qtd (med: número; outros/exames/consulta: 0/1)
   const fmt = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
   const getMaxFor = (item)=>{
+    // Mantém compatibilidade: se PM estiver marcado, usa maxPM nos cards informativos
     const pm = document.getElementById('desc-pm')?.checked;
     const lim = pm ? (item.maxPM ?? item.max ?? Infinity) : (item.max ?? Infinity);
     return (lim === undefined) ? Infinity : lim;
   };
 
+  // ===== UI DOS CARDS =====
   function renderCards(){
-    medGrid.innerHTML='';
-    exameGrid.innerHTML='';
-    outrosGrid.innerHTML='';
+    medGrid.innerHTML=''; exameGrid.innerHTML=''; outrosGrid.innerHTML='';
 
     ITENS.forEach(it=>{
       const qtd = state.get(it.id)||0;
       const el = document.createElement('div');
       el.className = 'card';
 
-      // decide o tipo de controle: default qty p/ cat 'med'; toggle p/ demais; pode ser sobrescrito por it.mode
+      // tipo de controle
       const mode = it.mode ? it.mode : (it.cat==='med' ? 'qty' : 'toggle');
 
       if(mode === 'qty'){
@@ -262,13 +264,15 @@
             <button data-act="inc" data-id="${it.id}">+</button>
           </div>
           <div class="maxbar">
-            <span style="font-size:12px;color:${excedido?'#b91c1c':'#64748b'}">Limite: normal ${it.max ?? '—'} / PM ${it.maxPM ?? '—'}${excedido?' • excedido':''}</span>
+            <span style="font-size:12px;color:${excedido?'#b91c1c':'#64748b'}">
+              Limite: normal ${it.max ?? '—'} / PM ${it.maxPM ?? '—'}${excedido?' • excedido':''}
+            </span>
             <div style="display:flex;gap:6px">
               <button class="ghost" data-act="max-normal" data-id="${it.id}">MAX</button>
               <button class="ghost" data-act="max-pm" data-id="${it.id}">MAX PM</button>
             </div>
           </div>`;
-      } else { // toggle
+      } else {
         const ativo = qtd > 0;
         el.innerHTML = `
           <div class="item-head">
@@ -279,25 +283,29 @@
           </div>
           <div class="img"><span>${it.emoji}</span></div>
           <div class="maxbar" style="justify-content:center">
-            <button class="ghost" data-act="toggle" data-id="${it.id}" style="${ativo?'background:#dcfce7;border-color:#bbf7d0':''}">
+            <button class="ghost" data-act="toggle" data-id="${it.id}"
+                    style="${ativo?'background:#dcfce7;border-color:#bbf7d0':''}">
               ${ativo? 'Selecionado' : 'Selecionar'}
             </button>
           </div>`;
       }
 
-      // decisão de layout (seção): se item.section==='med' força na seção inicial
-      const section = it.section ? it.section : (it.cat==='med' ? 'med' : (it.cat==='exame' || it.cat==='consulta') ? 'exame' : 'outros');
+      // Seção de destino
+      const section = it.section ? it.section :
+        (it.cat==='med' ? 'med' : (it.cat==='exame' || it.cat==='consulta') ? 'exame' : 'outros');
+
       if(section==='med') medGrid.appendChild(el);
       else if(section==='exame') exameGrid.appendChild(el);
       else outrosGrid.appendChild(el);
     });
   }
 
+  // ===== CÁLCULOS =====
   function somatoriosPorCategoria(){
     const sums = {med:0, exame:0, consulta:0, outros:0};
     state.forEach((q,id)=>{
       const it = ITENS.find(x=>x.id===id); if(!it) return;
-      const qty = it.cat==='med' ? q : (q>0?1:0); // meds usam a quantidade; outros = 0/1
+      const qty = it.cat==='med' ? q : (q>0?1:0); // meds = quantidade; outros/exames/consulta = 0/1
       sums[it.cat] += it.preco * qty;
     });
     return sums;
@@ -305,12 +313,13 @@
 
   function calcularTotais(){
     const sums = somatoriosPorCategoria();
-    let subtotal = sums.med + sums.exame + sums.consulta + sums.outros;
+    const subtotal = sums.med + sums.exame + sums.consulta + sums.outros;
 
-    const dCNPJ = document.getElementById('desc-cnpj').checked ? .20 : 0;
-    const dPM   = document.getElementById('desc-pm').checked ? .40 : 0;
-    const dPlano= document.getElementById('desc-plano').checked ? .20 : 0; // Plano 20%
-    const descRate = Math.max(dCNPJ, dPM, dPlano, 0); // aplica somente o MAIOR
+    // aplicar apenas UM desconto (radios)
+    let descRate = 0;
+    if (document.getElementById('desc-cnpj').checked)  descRate = 0.20;
+    if (document.getElementById('desc-pm').checked)    descRate = 0.40;
+    if (document.getElementById('desc-plano').checked) descRate = 0.20;
 
     const desconto = subtotal * descRate;
     const total = subtotal - desconto;
@@ -329,18 +338,20 @@
     document.getElementById('val-total').innerHTML = '<b>'+fmt(total)+'</b>';
   }
 
+  // ===== RECIBO =====
   function montarRecibo(){
     const {subtotal, desconto, total} = calcularTotais();
     const now = new Date();
     const pad = n => String(n).padStart(2,'0');
-    document.getElementById('r-meta').textContent = `CNPJ: 12.345.678/0001-95 · Data: ${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    document.getElementById('r-meta').textContent =
+      `CNPJ: 12.345.678/0001-95 · Data: ${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
     const tbody = document.querySelector('#r-items tbody');
     tbody.innerHTML='';
     state.forEach((q,id)=>{
       const it = ITENS.find(x=>x.id===id);
       if(!it || q<=0) return;
-      const qty = it.cat==='med' ? q : 1; // na notinha, itens selecionáveis contam 1
+      const qty = it.cat==='med' ? q : 1;
       const line = it.preco*qty;
       const tr = document.createElement('tr');
       tr.innerHTML = `<td>${it.nome}</td><td>${qty}</td><td>${fmt(line)}</td>`;
@@ -352,6 +363,7 @@
     document.getElementById('r-total').textContent    = fmt(total);
   }
 
+  // ===== ATALHOS VISUAIS =====
   function syncQuick(){
     const set=(id,el)=>{ const v = state.get(id)||0; if(el){ el.classList.toggle('active', v>0); } };
     set('tt', document.getElementById('q-tt'));
@@ -360,7 +372,7 @@
   }
   function recalc(){ atualizarUI(); montarRecibo(); syncQuick(); }
 
-  // Eventos dos cartões (delegação em #grids)
+  // ===== EVENTOS: CARDS =====
   grids.addEventListener('click', (e)=>{
     const act = e.target.getAttribute('data-act');
     if(!act) return;
@@ -394,17 +406,22 @@
     }
   });
 
-  // Painel
+  // ===== PAINEL =====
   document.getElementById('reset').addEventListener('click',()=>{
     state.clear();
-    ['desc-cnpj','desc-pm','desc-plano'].forEach(id=>{
-      const el = document.getElementById(id);
-      if(el) el.checked=false;
-    });
+    // volta para "Nenhum"
+    const nenhum = document.getElementById('desc-nenhum');
+    if(nenhum) nenhum.checked = true;
     renderCards(); recalc();
   });
 
-  // Quick actions (atalhos)
+  // Descontos (radios) → recalcular ao trocar
+  ['desc-nenhum','desc-cnpj','desc-pm','desc-plano'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('change', recalc);
+  });
+
+  // Quick actions (chips)
   (function attachQuick(){
     const btnTT = document.getElementById('q-tt');
     const btnCurto = document.getElementById('q-desl-curto');
@@ -444,8 +461,25 @@
   }
   document.getElementById('imprimir').addEventListener('click', salvarPNG_ENVIAR);
 
-  // Inicializa
+  // ===== Inicializa =====
   renderCards(); recalc();
+
+  // ===== Mini testes de verificação (console) =====
+  (function tests(){
+    const log=(name,pass)=>console.log(`%c[TEST] ${name}: ${pass?'OK':'FAIL'}`,'color:'+(pass?'#10b981':'#ef4444'));
+    // Consulta + Plano 20% → 9.600
+    state.clear(); state.set('consulta',1);
+    document.getElementById('desc-plano').checked=true; recalc();
+    log('Consulta com Plano 20% = 9.600', document.getElementById('total').textContent.includes('9.600'));
+    // PM 40% (exclusivo): 7.200
+    document.getElementById('desc-pm').checked=true; recalc();
+    log('Consulta com PM 40% = 7.200', document.getElementById('total').textContent.includes('7.200'));
+    // Nenhum → 12.000
+    document.getElementById('desc-nenhum').checked=true; recalc();
+    log('Consulta sem desconto = 12.000', document.getElementById('total').textContent.includes('12.000'));
+    // Reset
+    state.clear(); document.getElementById('desc-nenhum').checked=true; recalc();
+  })();
 </script>
 </body>
 </html>
